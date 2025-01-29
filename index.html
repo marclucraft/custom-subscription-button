@@ -26,10 +26,12 @@
     // Update button text based on subscription status
     const updateButtonText = (osButton) => {
       if (!osButton) return;
-      osButton.innerHTML = OneSignal.User.PushSubscription.optedIn
-        ? "Unsubscribe from Push Notifications"
-        : "Subscribe to Push Notifications";
-    };
+      OneSignalDeferred.push((OneSignal) => {
+        osButton.innerHTML = OneSignal.User.PushSubscription.optedIn
+          ? "Unsubscribe from Push Notifications"
+          : "Subscribe to Push Notifications";
+      });
+    }
 
     // Prompt or Opt In / Opt Out, on button click
     const handleButtonClick = () => {
@@ -44,7 +46,7 @@
       }
     };
 
-    // Wait for DOM to load before accessing elements
+    // Wait for button before trying to update text
     document.addEventListener("DOMContentLoaded", () => {
       const osButton = document.querySelector(".onesignal-prompt-button");
 
@@ -53,7 +55,6 @@
         osButton.addEventListener("click", handleButtonClick);
       }
 
-      // Ensure OneSignal is ready before using it
       OneSignalDeferred.push((OneSignal) => {
         OneSignal.User.PushSubscription.addEventListener("change", () => updateButtonText(osButton));
       });
