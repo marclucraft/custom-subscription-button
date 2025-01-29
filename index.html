@@ -1,50 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Custom Subscription Button | OneSignal</title>
 
-    <link rel="stylesheet" href="style.css" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Custom Subscription Button | OneSignal</title>
 
-    <!--OneSignal Initialisation Code-->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      OneSignalDeferred.push(function (OneSignal) {
-        OneSignal.init({
-          appId: "f052cae8-01f2-44d7-96af-18491e8bcd30",
-        });
+  <link rel="stylesheet" href="style.css" />
+
+  <!--OneSignal Initialisation Code-->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(function (OneSignal) {
+      OneSignal.init({
+        appId: "f052cae8-01f2-44d7-96af-18491e8bcd30",
       });
-    </script>
-  </head>
-  <body>
-    <button class="onesignal-prompt-button" role="button"></button>
-    <script>
-      // Get the button
+    });
+  </script>
+</head>
+
+<body>
+  <button class="onesignal-prompt-button" role="button"></button>
+  <script>
+    // Update button text based on subscription status
+    const updateButtonText = (osButton) => {
+      if (!osButton) return;
+      osButton.innerHTML = OneSignal.User.PushSubscription.optedIn
+        ? "Unsubscribe from Push Notifications"
+        : "Subscribe to Push Notifications";
+    };
+
+    // Prompt or Opt In / Opt Out, on button click
+    const handleButtonClick = () => {
+      const { User, Notifications } = OneSignal;
+
+      if (User.PushSubscription.token) {
+        User.PushSubscription.optedIn
+          ? User.PushSubscription.optOut()
+          : User.PushSubscription.optIn();
+      } else {
+        Notifications.requestPermission();
+      }
+    };
+
+    // Wait for DOM to load before accessing elements
+    document.addEventListener("DOMContentLoaded", () => {
       const osButton = document.querySelector(".onesignal-prompt-button");
 
-      // Function to update button text based on subscription status
-      const updateButtonText = () => {
-        osButton.innerHTML = OneSignal.User.PushSubscription.optedIn ? "Unsubscribe from Push Notifications" : "Subscribe to Push Notifications";
-      };
+      if (osButton) {
+        updateButtonText(osButton);
+        osButton.addEventListener("click", handleButtonClick);
+      }
 
-      // Set text for button on page load and subscription changes
+      // Ensure OneSignal is ready before using it
       OneSignalDeferred.push((OneSignal) => {
-        updateButtonText();
-        OneSignal.User.PushSubscription.addEventListener("change", updateButtonText);
+        OneSignal.User.PushSubscription.addEventListener("change", () => updateButtonText(osButton));
       });
+    });
 
-      // Prompt or Opt In / Opt Out, on button click
-      osButton.addEventListener("click", () => {
-        const { User, Notifications } = OneSignal;
+  </script>
+</body>
 
-        if (User.PushSubscription.token) {
-          User.PushSubscription.optedIn ? User.PushSubscription.optOut() : User.PushSubscription.optIn();
-        } else {
-          Notifications.requestPermission();
-        }
-      });
-    </script>
-  </body>
 </html>
